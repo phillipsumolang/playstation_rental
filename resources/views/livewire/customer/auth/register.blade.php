@@ -23,6 +23,12 @@
                                 <h4 class="mb-2">Daftar Akun</h4>
                                 <p class="mb-4">Setelah daftar, akun akan meminta verifikasi email sebelum bisa dipakai booking.</p>
 
+                                @if (session('auth.error'))
+                                    <div class="alert alert-danger">
+                                        {{ session('auth.error') }}
+                                    </div>
+                                @endif
+
                                 <form wire:submit="register" class="mb-3">
                                     @csrf
                                     <div class="mb-3">
@@ -95,8 +101,9 @@
                                         @enderror
                                     </div>
 
-                                    <button type="submit" class="btn btn-primary d-grid w-100">
-                                        Daftar
+                                    <button type="submit" class="btn btn-primary d-grid w-100" wire:loading.attr="disabled">
+                                        <span wire:loading.remove wire:target="register">Daftar</span>
+                                        <span wire:loading wire:target="register">Mendaftar...</span>
                                     </button>
                                 </form>
 
