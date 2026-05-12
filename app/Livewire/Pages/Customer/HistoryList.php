@@ -30,8 +30,12 @@ class HistoryList extends Component
     public function cancel_booking($booking)
     {
         try {
-            DB::transaction(function () use ($booking) {
-                $booking = Booking::findOrFail($booking['id']);
+            $user = getAuthUser();
+            $customer = Customer::where('user_id', '=', $user->id)->firstOrFail();
+
+            DB::transaction(function () use ($booking, $customer) {
+                $booking = Booking::where('customer_id', $customer->id)
+                    ->findOrFail($booking['id']);
                 $booking->update(['status' => 'cancelled']);
                 $booking->delete();
             });

@@ -21,7 +21,8 @@ class ComputerView extends Component
 
             $this->redirectRoute('admin.master-data.computer');
         } catch (Exception $ex) {
-            dd($ex);
+            report($ex);
+            session()->flash('error', 'Terjadi kesalahan saat menghapus data.');
         }
 
         

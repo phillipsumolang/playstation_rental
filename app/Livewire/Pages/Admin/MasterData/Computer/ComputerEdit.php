@@ -27,7 +27,8 @@ class ComputerEdit extends Component
         } catch (ValidationException $ex) {
             throw $ex;
         } catch (Exception $ex) {
-            dd($ex);
+            report($ex);
+            session()->flash('error', 'Terjadi kesalahan saat memperbarui data.');
         }
     }
 
