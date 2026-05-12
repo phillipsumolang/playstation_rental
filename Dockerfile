@@ -72,9 +72,12 @@ sed -i "s/Listen 80/Listen ${PORT}/" /etc/apache2/ports.conf
 sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf
 
 # Run Laravel setup
-php artisan migrate --force || true
-php artisan db:seed --force || true
+php artisan config:clear
 php artisan config:cache || true
+php artisan migrate --force || true
+php artisan permission:cache-reset || true
+php artisan db:seed --force && echo "Seeder OK" || echo "Seeder FAILED (see above)"
+php artisan permission:cache-reset || true
 php artisan route:cache || true
 php artisan view:cache || true
 
