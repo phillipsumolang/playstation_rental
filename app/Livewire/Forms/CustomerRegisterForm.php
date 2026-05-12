@@ -3,6 +3,8 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Customer;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
@@ -37,7 +39,19 @@ class CustomerRegisterForm extends Form
     {
         $this->validate();
 
-        DB::transaction(function () {
+        $customerPermissions = [
+            'list-computer', 'view-computer', 'cancel-booking-computer',
+            'list-history-booking', 'create-booking-computer', 'reschedule-booking',
+        ];
+
+        foreach ($customerPermissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
+
+        $customerRole = Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+        $customerRole->syncPermissions($customerPermissions);
+
+        DB::transaction(function () use ($customerRole) {
             $user = User::create([
                 'name' => $this->name,
                 'username' => $this->username,
@@ -53,7 +67,7 @@ class CustomerRegisterForm extends Form
                 'user_id' => $user->id,
             ]);
 
-            $user->assignRole('customer');
+            $user->assignRole($customerRole);
 
             event(new Registered($user));
             Auth::login($user);
