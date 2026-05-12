@@ -35,7 +35,8 @@ class Register extends Component
             throw $ex;
         } catch (Exception $ex) {
             $this->form->reset();
-            throw $ex;
+            report($ex);
+            session()->flash('auth.error', 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.');
         }
     }
 
