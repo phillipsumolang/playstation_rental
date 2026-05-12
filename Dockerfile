@@ -7,7 +7,7 @@ COPY . .
 RUN npm run prod
 
 # Stage 2: PHP application
-FROM php:8.2-apache
+FROM php:8.4-apache
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -19,10 +19,11 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
+    libicu-dev \
     zip \
     unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd xml zip \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd xml zip intl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Enable Apache mod_rewrite
