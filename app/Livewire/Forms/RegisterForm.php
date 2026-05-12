@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Customer;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Validate;
@@ -31,7 +32,10 @@ class RegisterForm extends Form
                 'password' => $this->password
             ]);
 
-            $user->assignRole('admin');
+            $adminRole = Role::firstOrCreate(
+                ['name' => 'admin', 'guard_name' => 'web']
+            );
+            $user->assignRole($adminRole);
         });
     }
 }
