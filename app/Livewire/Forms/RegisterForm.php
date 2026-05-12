@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Forms;
 
-use App\Models\Customer;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +24,20 @@ class RegisterForm extends Form
     {
         $this->validate();
 
-        DB::transaction(function () {
+        $adminPermissions = [
+            'create-computer', 'delete-computer', 'edit-computer',
+            'list-computer', 'view-computer', 'cancel-booking-computer',
+            'list-history-booking', 'create-walkin-booking',
+        ];
+
+        foreach ($adminPermissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
+
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $adminRole->syncPermissions($adminPermissions);
+
+        DB::transaction(function () use ($adminRole) {
             $user = User::create([
                 'name' => $this->name,
                 'username' => $this->username,
@@ -32,9 +45,6 @@ class RegisterForm extends Form
                 'password' => $this->password
             ]);
 
-            $adminRole = Role::firstOrCreate(
-                ['name' => 'admin', 'guard_name' => 'web']
-            );
             $user->assignRole($adminRole);
         });
     }

@@ -21,21 +21,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Temporary diagnostic route — remove after debugging
-Route::middleware('auth')->get('/debug-roles', function () {
-    $user = auth()->user();
-    return response()->json([
-        'user_id'        => $user->id,
-        'user_email'     => $user->email,
-        'roles_relation' => $user->roles->map(fn($r) => ['name' => $r->name, 'guard' => $r->guard_name]),
-        'model_has_roles' => \Illuminate\Support\Facades\DB::table('model_has_roles')
-            ->where('model_type', 'App\Models\User')
-            ->where('model_id', $user->id)
-            ->get(),
-        'all_roles_in_db' => \Illuminate\Support\Facades\DB::table('roles')->get(),
-    ]);
-});
-
 // auth admin routes
 Route::get('admin/auth/register', Register::class)->name('admin.auth.register');
 Route::get('admin/auth/login', Login::class)->name('admin.auth.login');
