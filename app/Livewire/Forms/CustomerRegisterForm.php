@@ -69,7 +69,13 @@ class CustomerRegisterForm extends Form
 
             $user->assignRole($customerRole);
 
-            event(new Registered($user));
+            $mailer = config('mail.default');
+            if (in_array($mailer, ['smtp', 'ses', 'mailgun', 'postmark', 'ses-v2'])) {
+                event(new Registered($user));
+            } else {
+                $user->markEmailAsVerified();
+            }
+
             Auth::login($user);
         });
     }

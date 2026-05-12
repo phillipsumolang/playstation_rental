@@ -181,7 +181,7 @@ class Booking extends Model
                 'customer_id' => $booking->customer_id,
                 'computer_id' => $booking->computer_id,
                 'booking_start_date' => $booking->booking_start_date,
-                'booking_end_date' => $booking->booking_start_date,
+                'booking_end_date' => $booking->booking_end_date,
                 'booking_hour' => $booking->booking_hour,
                 'total_booking_fee' => $booking->total_booking_fee
             ]);

@@ -4,6 +4,7 @@ namespace App\Livewire\Customer\Auth;
 
 use App\Livewire\Forms\CustomerRegisterForm;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -24,7 +25,12 @@ class Register extends Component
             $this->form->register();
             $this->form->reset();
 
-            $this->redirectRoute('verification.notice');
+            $user = Auth::user();
+            if ($user && $user->hasVerifiedEmail()) {
+                $this->redirectRoute('customer.booking');
+            } else {
+                $this->redirectRoute('verification.notice');
+            }
         } catch (ValidationException $ex) {
             throw $ex;
         } catch (Exception $ex) {

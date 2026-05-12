@@ -3,8 +3,10 @@
 namespace App\Livewire\Admin\Auth;
 
 use App\Livewire\Forms\RegisterForm;
+use App\Models\Role;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -16,7 +18,16 @@ class Register extends Component
 
     public function mount()
     {
-        
+        $adminRole = Role::where('name', 'admin')->where('guard_name', 'web')->first();
+        if ($adminRole) {
+            $hasAdmin = DB::table('model_has_roles')
+                ->where('role_id', $adminRole->getKey())
+                ->where('model_type', \App\Models\User::class)
+                ->exists();
+            if ($hasAdmin) {
+                abort(403, 'Admin sudah terdaftar.');
+            }
+        }
     }
 
     public function register(): void
@@ -29,7 +40,8 @@ class Register extends Component
             throw $ex;
         } catch (Exception $ex) {
             $this->form->reset();
-            dd($ex);
+            report($ex);
+            session()->flash('auth.error', 'Terjadi kesalahan saat registrasi.');
         }
     }
 
