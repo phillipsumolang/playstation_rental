@@ -26,6 +26,10 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd xml zip intl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Configure Apache MPM - disable mpm_event, enable mpm_prefork (required for mod_php)
+RUN a2dismod mpm_event 2>/dev/null || true \
+    && a2enmod mpm_prefork 2>/dev/null || true
+
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
@@ -57,17 +61,27 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Create startup script
-RUN echo '#!/bin/bash\n\
-sed -i "s/Listen 80/Listen ${PORT:-80}/" /etc/apache2/ports.conf\n\
-sed -i "s/:80/:${PORT:-80}/" /etc/apache2/sites-available/000-default.conf\n\
-php artisan migrate --force\n\
-php artisan config:cache\n\
-php artisan route:cache\n\
-php artisan view:cache\n\
-apache2-foreground' > /usr/local/bin/start.sh \
-    && chmod +x /usr/local/bin/start.sh
+# Create startup script that dynamically sets the PORT
+COPY <<'EOF' /usr/local/bin/start.sh
+#!/bin/bash
+set -e
 
-EXPOSE ${PORT:-80}
+# Railway provides PORT env var - configure Apache to listen on it
+PORT=${PORT:-80}
+sed -i "s/Listen 80/Listen ${PORT}/" /etc/apache2/ports.conf
+sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf
+
+# Run Laravel setup
+php artisan migrate --force || true
+php artisan config:cache || true
+php artisan route:cache || true
+php artisan view:cache || true
+
+# Start Apache
+exec apache2-foreground
+EOF
+RUN chmod +x /usr/local/bin/start.sh
+
+EXPOSE 80
 
 CMD ["/usr/local/bin/start.sh"]
