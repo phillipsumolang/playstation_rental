@@ -81,6 +81,15 @@ sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-avail
 # Ensure critical env defaults for Railway
 export APP_URL="${APP_URL:-https://playstationrental-production.up.railway.app}"
 export TIMEZONE="${TIMEZONE:-Asia/Jakarta}"
+export VIEW_COMPILED_PATH="${VIEW_COMPILED_PATH:-/var/www/html/storage/framework/views}"
+
+# Guarantee storage directories exist and are writable before any artisan command
+mkdir -p /var/www/html/storage/framework/views \
+         /var/www/html/storage/framework/cache/data \
+         /var/www/html/storage/framework/sessions \
+         /var/www/html/storage/logs
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Run Laravel setup
 php artisan config:clear
