@@ -79,9 +79,11 @@ export TIMEZONE="${TIMEZONE:-Asia/Jakarta}"
 php artisan config:clear
 php artisan config:cache || true
 php artisan migrate --force || true
+php artisan storage:link || true
 php artisan permission:cache-reset || true
 php artisan db:seed --force && echo "Seeder OK" || echo "Seeder FAILED (see above)"
 php artisan permission:cache-reset || true
+php artisan route:cache || true
 php artisan view:cache || true
 
 # Start Apache
