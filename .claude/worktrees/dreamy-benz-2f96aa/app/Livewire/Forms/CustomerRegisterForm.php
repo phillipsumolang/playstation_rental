@@ -1,0 +1,82 @@
+<?php
+
+namespace App\Livewire\Forms;
+
+use App\Models\Customer;
+use App\Models\Permission;
+use App\Models\Role;
+use App\Models\User;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Validate;
+use Livewire\Form;
+
+class CustomerRegisterForm extends Form
+{
+    #[Validate(rule: 'required|string|min:3|max:150')]
+    public string $name = '';
+
+    #[Validate(rule: 'required|string|min:3|max:100|unique:users,username')]
+    public string $username = '';
+
+    #[Validate(rule: 'required|email|unique:users,email')]
+    public string $email = '';
+
+    #[Validate(rule: 'required|string|min:8')]
+    public string $password = '';
+
+    #[Validate(rule: 'required|string|min:3|max:200')]
+    public string $address = '';
+
+    #[Validate(rule: 'required|string|in:male,female')]
+    public string $gender = '';
+
+    #[Validate(rule: 'required|string|min:10|max:12|regex:/^\d+$/')]
+    public string $phone = '';
+
+    public function register(): void
+    {
+        $this->validate();
+
+        $customerPermissions = [
+            'list-computer', 'view-computer', 'cancel-booking-computer',
+            'list-history-booking', 'create-booking-computer', 'reschedule-booking',
+        ];
+
+        foreach ($customerPermissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
+
+        $customerRole = Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+        $customerRole->syncPermissions($customerPermissions);
+
+        DB::transaction(function () use ($customerRole) {
+            $user = User::create([
+                'name' => $this->name,
+                'username' => $this->username,
+                'email' => $this->email,
+                'password' => $this->password,
+            ]);
+
+            Customer::create([
+                'name' => $this->name,
+                'address' => $this->address,
+                'gender' => $this->gender,
+                'phone' => $this->phone,
+                'user_id' => $user->id,
+            ]);
+
+            $user->assignRole($customerRole);
+
+            $mailer = config('mail.default');
+            if (in_array($mailer, ['smtp', 'ses', 'mailgun', 'postmark', 'ses-v2'])) {
+                event(new Registered($user));
+            } else {
+                $user->markEmailAsVerified();
+            }
+
+            Auth::login($user);
+        });
+    }
+}
